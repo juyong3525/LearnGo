@@ -9,6 +9,14 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+type extractedJob struct {
+	id       string
+	location string
+	title    string
+	salary   string
+	summary  string
+}
+
 // 기본 URL
 var baseURL string = "https://kr.indeed.com/%EC%B7%A8%EC%97%85?q=python&limit=50"
 
@@ -23,7 +31,24 @@ func main() {
 // 기본 URL에서 각각의 페이지 URL을 만드는 함수
 func getPage(page int) {
 	pageURL := baseURL + "&start=" + strconv.Itoa(page*50)
-	fmt.Println("Requesting", pageURL)
+
+	res, err := http.Get(pageURL) // 각각의 page URL을 get한다
+	checkErr(err)
+	checkCode(res)
+
+	defer res.Body.Close() // defer: 함수가 끝난 시점(마지막)에 실행
+
+	doc, err := goquery.NewDocumentFromReader(res.Body) // res의 html을 가져온다
+	checkErr(err)
+
+	searchCards := doc.Find(".jobsearch-SerpJobCard")
+	searchCards.Each(func(i int, card *goquery.Selection) {
+		id, _ := card.Attr("data-jk")         // 클래스의 값을 가져오는 메소드
+		title := card.Find(".title>a").Text() // Text(): 클래스에 있는 string을 가져오는 메소드
+		location := card.Find(".sjcl").Find(".location").Text()
+
+		fmt.Println(id, title, location)
+	})
 }
 
 // 전체 페이지 개수를 찾는 함수
