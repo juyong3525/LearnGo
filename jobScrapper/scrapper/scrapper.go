@@ -70,10 +70,10 @@ func getPage(page int, url string, mainC chan<- []extractedJob) {
 
 func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 	id, _ := card.Attr("data-jk")                      // 클래스의 값을 가져오는 메소드
-	title := cleanString(card.Find(".title>a").Text()) // Text(): 클래스에 있는 string을 가져오는 메소드
-	location := cleanString(card.Find(".sjcl").Text())
-	salary := cleanString(card.Find(".salaryText").Text())
-	summary := cleanString(card.Find(".summary").Text())
+	title := CleanString(card.Find(".title>a").Text()) // Text(): 클래스에 있는 string을 가져오는 메소드
+	location := CleanString(card.Find(".sjcl").Text())
+	salary := CleanString(card.Find(".salaryText").Text())
+	summary := CleanString(card.Find(".summary").Text())
 	c <- extractedJob{
 		id:       id,
 		title:    title,
@@ -83,7 +83,8 @@ func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 	}
 }
 
-func cleanString(str string) string {
+// CleanString cleans a string
+func CleanString(str string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(str)), " ")
 }
 
@@ -109,7 +110,6 @@ func getPages(url string) int {
 
 // CSV를 작성, 데이터를 쓰는 함수
 func writeJobs(jobs []extractedJob) {
-	var jobDataAll []string
 
 	fileName := "jobs.csv"
 	file, err := os.Create(fileName)
@@ -130,11 +130,8 @@ func writeJobs(jobs []extractedJob) {
 	}
 
 	for i := 0; i < len(jobs); i++ {
-		jobData := <-c
-		jobDataAll = append(jobDataAll, jobData...)
+		w.Write(<-c)
 	}
-
-	w.Write(jobDataAll)
 }
 
 func makeJobData(job extractedJob, c chan<- []string) {
