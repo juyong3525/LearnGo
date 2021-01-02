@@ -1,0 +1,1 @@
+extractJob 함수까지 완료 (struct에 title, link, salary 등 완료함)
