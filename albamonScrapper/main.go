@@ -116,11 +116,20 @@ func writeJobs(jobs []extractedJob) {
 	wErr := w.Write(headers)
 	checkErr(wErr)
 
+	c := make(chan []string)
+
 	for _, job := range jobs {
-		jobSlice := []string{job.title, job.location, job.salary, job.link}
-		jwErr := w.Write(jobSlice)
-		checkErr(jwErr)
+		go makeJobData(job, c)
 	}
+
+	for i := 0; i < len(jobs); i++ {
+		jobData := <-c
+		w.Write(jobData)
+	}
+}
+
+func makeJobData(job extractedJob, c chan<- []string) {
+	c <- []string{job.title, job.location, job.salary, job.link}
 }
 
 func checkErr(err error) {
